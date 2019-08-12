@@ -26,7 +26,7 @@ public class AliCloudProvider implements CloudProvider {
 
   final String id = ID;
 
-  final String displayName = "Alicloud";
+  final String displayName = "AlibabaCloud";
 
   final Class<? extends Annotation> operationAnnotationType = AliCloudOperation.class;
 
