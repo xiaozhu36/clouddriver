@@ -17,6 +17,7 @@ package com.netflix.spinnaker.clouddriver.aws.deploy.ops;
 
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.model.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.clouddriver.aws.deploy.description.DeployCloudFormationDescription;
 import com.netflix.spinnaker.clouddriver.aws.security.AmazonClientProvider;
@@ -56,7 +57,13 @@ public class DeployCloudFormationAtomicOperation implements AtomicOperation<Map>
     AmazonCloudFormation amazonCloudFormation =
         amazonClientProvider.getAmazonCloudFormation(
             description.getCredentials(), description.getRegion());
-    String template = description.getTemplateBody();
+    String template;
+    try {
+      template = objectMapper.writeValueAsString(description.getTemplateBody());
+    } catch (JsonProcessingException e) {
+      throw new IllegalArgumentException(
+          "Could not serialize CloudFormation Stack template body", e);
+    }
     List<Parameter> parameters =
         description.getParameters().entrySet().stream()
             .map(

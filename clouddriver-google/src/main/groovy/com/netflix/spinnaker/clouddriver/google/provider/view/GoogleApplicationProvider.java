@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import com.netflix.spinnaker.cats.cache.Cache;
 import com.netflix.spinnaker.cats.cache.CacheData;
 import com.netflix.spinnaker.cats.cache.RelationshipCacheFilter;
@@ -34,13 +35,9 @@ import com.netflix.spinnaker.clouddriver.google.model.GoogleApplication;
 import com.netflix.spinnaker.clouddriver.model.Application;
 import com.netflix.spinnaker.clouddriver.model.ApplicationProvider;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
-import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -69,57 +66,32 @@ final class GoogleApplicationProvider implements ApplicationProvider {
     return data.stream().map(this::applicationFromCacheData).collect(toSet());
   }
 
-  @Value
-  static class ApplicationCacheData {
-    Map<String, Object> applicationAttributes;
-    Set<String> clusterIdentifiers;
-    Set<String> instanceIdentifiers;
-  }
+  @Override
+  public Application getApplication(String name) {
 
-  @Nullable
-  ApplicationCacheData getApplicationCacheData(String name) {
     CacheData cacheData =
         cacheView.get(
             APPLICATIONS.getNs(),
             Keys.getApplicationKey(name),
             RelationshipCacheFilter.include(CLUSTERS.getNs(), INSTANCES.getNs()));
-    return getApplicationCacheData(cacheData);
-  }
-
-  private ApplicationCacheData getApplicationCacheData(CacheData cacheData) {
     if (cacheData == null) {
       return null;
     }
-    return new ApplicationCacheData(
-        cacheData.getAttributes(),
-        getRelationships(cacheData, CLUSTERS),
-        getRelationships(cacheData, INSTANCES));
-  }
 
-  @Override
-  public Application getApplication(String name) {
-    return applicationFromCacheData(getApplicationCacheData(name));
+    return applicationFromCacheData(cacheData);
   }
 
   private GoogleApplication.View applicationFromCacheData(CacheData cacheData) {
-    return applicationFromCacheData(getApplicationCacheData(cacheData));
-  }
 
-  private GoogleApplication.View applicationFromCacheData(
-      ApplicationCacheData applicationCacheData) {
-    if (applicationCacheData == null) {
-      return null;
-    }
     GoogleApplication application =
-        objectMapper.convertValue(
-            applicationCacheData.getApplicationAttributes(), GoogleApplication.class);
+        objectMapper.convertValue(cacheData.getAttributes(), GoogleApplication.class);
     if (application == null) {
       return null;
     }
 
     GoogleApplication.View applicationView = application.getView();
 
-    Set<String> clusters = applicationCacheData.getClusterIdentifiers();
+    Collection<String> clusters = getRelationships(cacheData, CLUSTERS);
     clusters.forEach(
         key -> {
           Map<String, String> parsedKey = Keys.parse(key);
@@ -130,14 +102,14 @@ final class GoogleApplicationProvider implements ApplicationProvider {
         });
 
     List<Map<String, String>> instances =
-        applicationCacheData.getInstanceIdentifiers().stream().map(Keys::parse).collect(toList());
+        getRelationships(cacheData, INSTANCES).stream().map(Keys::parse).collect(toList());
     applicationView.setInstances(instances);
 
     return applicationView;
   }
 
-  private Set<String> getRelationships(CacheData cacheData, Namespace namespace) {
-    Collection<String> relationships = cacheData.getRelationships().get(namespace.getNs());
-    return relationships == null ? Collections.emptySet() : new HashSet<>(relationships);
+  private Collection<String> getRelationships(CacheData cacheData, Namespace namespace) {
+    Collection<String> result = cacheData.getRelationships().get(namespace.getNs());
+    return result != null ? result : ImmutableSet.of();
   }
 }

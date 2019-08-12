@@ -16,25 +16,22 @@
 
 package com.netflix.spinnaker.clouddriver.eureka.api
 
-import com.netflix.spinnaker.config.OkHttpClientConfiguration
 import retrofit.RestAdapter
-import retrofit.client.OkClient
 import retrofit.converter.Converter
+
+import java.util.regex.Pattern
 
 class EurekaApiFactory {
 
   private Converter eurekaConverter
-  private OkHttpClientConfiguration okHttpClientConfiguration
 
-  EurekaApiFactory(Converter eurekaConverter, OkHttpClientConfiguration okHttpClientConfiguration) {
+  EurekaApiFactory(Converter eurekaConverter) {
     this.eurekaConverter = eurekaConverter
-    this.okHttpClientConfiguration = okHttpClientConfiguration
   }
 
   public EurekaApi createApi(String endpoint) {
     new RestAdapter.Builder()
       .setConverter(eurekaConverter)
-      .setClient(new OkClient(okHttpClientConfiguration.create()))
       .setEndpoint(endpoint)
       .build()
       .create(EurekaApi)

@@ -61,9 +61,4 @@ public class MockCloudFoundryClient implements CloudFoundryClient {
   public Tasks getTasks() {
     return tasks;
   }
-
-  @Override
-  public Logs getLogs() {
-    return mock(Logs.class);
-  }
 }
