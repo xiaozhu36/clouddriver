@@ -24,6 +24,9 @@ import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesRequest;
 import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesResponse;
 import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesResponse.VSwitch;
+import com.aliyuncs.vpc.model.v20160428.DescribeVpcsRequest;
+import com.aliyuncs.vpc.model.v20160428.DescribeVpcsResponse;
+import com.aliyuncs.vpc.model.v20160428.DescribeVpcsResponse.Vpc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.cats.agent.AccountAware;
 import com.netflix.spinnaker.cats.agent.AgentDataType;
@@ -79,7 +82,12 @@ public class AliCloudSubnetCachingAgent implements CachingAgent, AccountAware {
     try {
       describeVSwitchesResponse = client.getAcsResponse(describeVSwitchesRequest);
       for (VSwitch vSwitch : describeVSwitchesResponse.getVSwitches()) {
-        AliCloudSubnetCachingAgent.InnerVSwitche innerVSwitche = transformation(vSwitch);
+        DescribeVpcsRequest describeVpcsRequest = new DescribeVpcsRequest();
+        describeVpcsRequest.setVpcId(vSwitch.getVpcId());
+        DescribeVpcsResponse describeVpcsResponse = client.getAcsResponse(describeVpcsRequest);
+        Vpc vpc = describeVpcsResponse.getVpcs().get(0);
+        AliCloudSubnetCachingAgent.InnerVSwitche innerVSwitche =
+            transformation(vSwitch, vpc.getVpcName());
         Map<String, Object> attributes = objectMapper.convertValue(innerVSwitche, Map.class);
         CacheData data =
             new DefaultCacheData(
@@ -100,7 +108,7 @@ public class AliCloudSubnetCachingAgent implements CachingAgent, AccountAware {
     return new DefaultCacheResult(resultMap);
   }
 
-  private InnerVSwitche transformation(VSwitch vSwitch) {
+  private InnerVSwitche transformation(VSwitch vSwitch, String vpcName) {
     InnerVSwitche innerVSwitche = new InnerVSwitche();
     innerVSwitche.setAccount(account.getName());
     innerVSwitche.setRegion(region);
@@ -109,27 +117,21 @@ public class AliCloudSubnetCachingAgent implements CachingAgent, AccountAware {
     innerVSwitche.setVSwitchId(vSwitch.getVSwitchId());
     innerVSwitche.setVSwitchName(vSwitch.getVSwitchName());
     innerVSwitche.setZoneId(vSwitch.getZoneId());
+    innerVSwitche.setVpcName(vpcName);
     return innerVSwitche;
   }
 
   @Data
   class InnerVSwitche {
-
     private String account;
-
     private String region;
-
     private String status;
-
     private String vSwitchId;
-
     private String vSwitchName;
-
     private String vpcId;
-
     private String zoneId;
-
     private String type = AliCloudProvider.ID;
+    private String vpcName;
   }
 
   @Override
