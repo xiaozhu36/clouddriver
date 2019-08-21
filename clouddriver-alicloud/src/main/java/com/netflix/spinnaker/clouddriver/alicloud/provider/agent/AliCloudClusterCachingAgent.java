@@ -86,14 +86,12 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
     DescribeScalingGroupsRequest describeScalingGroupsRequest = new DescribeScalingGroupsRequest();
     describeScalingGroupsRequest.setPageSize(50);
     DescribeScalingGroupsResponse describeScalingGroupsResponse;
-    CacheResult result = null;
+    CacheResult result = new DefaultCacheResult(new HashMap<>(16));
     try {
       describeScalingGroupsResponse = client.getAcsResponse(describeScalingGroupsRequest);
       if (describeScalingGroupsResponse.getScalingGroups().size() > 0) {
         List<ScalingGroup> scalingGroups = describeScalingGroupsResponse.getScalingGroups();
         result = buildCacheResult(scalingGroups, client);
-      } else {
-        result = new DefaultCacheResult(new HashMap<>(16));
       }
 
     } catch (ServerException e) {
