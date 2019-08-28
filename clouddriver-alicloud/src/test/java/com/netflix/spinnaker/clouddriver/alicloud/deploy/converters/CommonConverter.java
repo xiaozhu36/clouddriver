@@ -22,7 +22,9 @@ import static org.mockito.Mockito.when;
 import com.aliyuncs.IAcsClient;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentials;
+import com.netflix.spinnaker.clouddriver.model.ClusterProvider;
 import com.netflix.spinnaker.clouddriver.security.AccountCredentialsProvider;
+import java.util.List;
 
 public class CommonConverter {
 
@@ -34,6 +36,7 @@ public class CommonConverter {
   static ClientFactory clientFactory = mock(ClientFactory.class);
   static AccountCredentialsProvider accountCredentialsProvider =
       mock(AccountCredentialsProvider.class);
+  static List<ClusterProvider> clusterProviders = mock(List.class);
 
   static {
     when(credentials.getName()).thenReturn(ACCOUNT);

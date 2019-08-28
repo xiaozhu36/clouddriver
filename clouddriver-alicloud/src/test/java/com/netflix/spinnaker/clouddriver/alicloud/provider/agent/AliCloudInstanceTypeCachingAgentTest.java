@@ -19,8 +19,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import com.aliyuncs.ecs.model.v20140526.DescribeZonesResponse;
-import com.aliyuncs.ecs.model.v20140526.DescribeZonesResponse.Zone;
+import com.aliyuncs.ecs.model.v20140526.DescribeAvailableResourceResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeAvailableResourceResponse.AvailableZone;
 import com.aliyuncs.exceptions.ClientException;
 import com.netflix.spinnaker.cats.agent.CacheResult;
 import com.netflix.spinnaker.cats.cache.CacheData;
@@ -55,15 +55,15 @@ public class AliCloudInstanceTypeCachingAgentTest extends CommonCachingAgentTest
     assertTrue(key.equals(instanceTypes.get(0).getId()));
   }
 
-  private class ZonesAnswer implements Answer<DescribeZonesResponse> {
+  private class ZonesAnswer implements Answer<DescribeAvailableResourceResponse> {
     @Override
-    public DescribeZonesResponse answer(InvocationOnMock invocation) throws Throwable {
-      DescribeZonesResponse response = new DescribeZonesResponse();
-      List<Zone> zones = new ArrayList<>();
-      Zone zone = new Zone();
+    public DescribeAvailableResourceResponse answer(InvocationOnMock invocation) throws Throwable {
+      DescribeAvailableResourceResponse response = new DescribeAvailableResourceResponse();
+      List<AvailableZone> zones = new ArrayList<>();
+      AvailableZone zone = new AvailableZone();
       zone.setZoneId(ZONEID);
       zones.add(zone);
-      response.setZones(zones);
+      response.setAvailableZones(zones);
       return response;
     }
   }

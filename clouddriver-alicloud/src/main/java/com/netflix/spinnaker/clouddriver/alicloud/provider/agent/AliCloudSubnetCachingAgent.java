@@ -42,11 +42,10 @@ import com.netflix.spinnaker.clouddriver.alicloud.provider.AliProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentials;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Data;
 
 public class AliCloudSubnetCachingAgent implements CachingAgent, AccountAware {
@@ -64,12 +63,13 @@ public class AliCloudSubnetCachingAgent implements CachingAgent, AccountAware {
     this.client = client;
   }
 
-  static final Set<AgentDataType> types = new HashSet<>();
-
-  static {
-    AgentDataType agentDataType = new AgentDataType(SUBNETS.ns, AUTHORITATIVE);
-    types.add(agentDataType);
-  }
+  static final Collection<AgentDataType> types =
+      Collections.unmodifiableCollection(
+          new ArrayList<AgentDataType>() {
+            {
+              add(AUTHORITATIVE.forType(SUBNETS.ns));
+            }
+          });
 
   @Override
   public CacheResult loadData(ProviderCache providerCache) {

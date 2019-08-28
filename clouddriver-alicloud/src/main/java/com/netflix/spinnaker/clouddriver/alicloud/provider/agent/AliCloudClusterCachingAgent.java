@@ -28,6 +28,9 @@ import com.aliyuncs.IAcsClient;
 import com.aliyuncs.ecs.model.v20140526.DescribeInstancesRequest;
 import com.aliyuncs.ecs.model.v20140526.DescribeInstancesResponse;
 import com.aliyuncs.ecs.model.v20140526.DescribeInstancesResponse.Instance;
+import com.aliyuncs.ecs.model.v20140526.DescribeSecurityGroupsRequest;
+import com.aliyuncs.ecs.model.v20140526.DescribeSecurityGroupsResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeSecurityGroupsResponse.SecurityGroup;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingConfigurationsRequest;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingConfigurationsResponse;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingConfigurationsResponse.ScalingConfiguration;
@@ -59,6 +62,7 @@ import com.netflix.spinnaker.clouddriver.cache.OnDemandAgent;
 import com.netflix.spinnaker.clouddriver.cache.OnDemandMetricsSupport;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +83,19 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
     this.objectMapper = objectMapper;
     this.client = client;
   }
+
+  static final Collection<AgentDataType> types =
+      Collections.unmodifiableCollection(
+          new ArrayList<AgentDataType>() {
+            {
+              add(AUTHORITATIVE.forType(CLUSTERS.ns));
+              add(AUTHORITATIVE.forType(SERVER_GROUPS.ns));
+              add(AUTHORITATIVE.forType(APPLICATIONS.ns));
+              add(INFORMATIVE.forType(LOAD_BALANCERS.ns));
+              add(INFORMATIVE.forType(LAUNCH_CONFIGS.ns));
+              add(INFORMATIVE.forType(INSTANCES.ns));
+            }
+          });
 
   @Override
   public CacheResult loadData(ProviderCache providerCache) {
@@ -106,7 +123,7 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
   }
 
   private CacheResult buildCacheResult(List<ScalingGroup> scalingGroups, IAcsClient client)
-      throws ServerException, ClientException, Exception {
+      throws Exception {
     Map<String, Collection<CacheData>> resultMap = new HashMap<>(16);
 
     Map<String, CacheData> applicationCaches = new HashMap<>(16);
@@ -126,6 +143,22 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
       scalingConfigurationsRequest.setScalingConfigurationId1(activeScalingConfigurationId);
       DescribeScalingConfigurationsResponse scalingConfigurationsResponse =
           client.getAcsResponse(scalingConfigurationsRequest);
+      List<ScalingConfiguration> scalingConfigurations =
+          scalingConfigurationsResponse.getScalingConfigurations();
+      String securityGroupName = "";
+      // get securityGroupName
+      if (scalingConfigurations.size() > 0) {
+        ScalingConfiguration scalingConfiguration = scalingConfigurations.get(0);
+        String securityGroupId = scalingConfiguration.getSecurityGroupId();
+        DescribeSecurityGroupsRequest securityGroupsRequest = new DescribeSecurityGroupsRequest();
+        securityGroupsRequest.setSecurityGroupId(securityGroupId);
+        DescribeSecurityGroupsResponse securityGroupsResponse =
+            client.getAcsResponse(securityGroupsRequest);
+        if (securityGroupsResponse.getSecurityGroups().size() > 0) {
+          SecurityGroup securityGroup = securityGroupsResponse.getSecurityGroups().get(0);
+          securityGroupName = securityGroup.getSecurityGroupName();
+        }
+      }
 
       List<String> loadBalancerIds = sg.getLoadBalancerIds();
       List<DescribeLoadBalancerAttributeResponse> loadBalancerAttributes = new ArrayList<>();
@@ -175,7 +208,8 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
               new HashMap<String, String>(16),
               scalingConfigurationsResponse,
               loadBalancerAttributes,
-              scalingInstances);
+              scalingInstances,
+              securityGroupName);
 
       cacheApplication(sgData, applicationCaches);
       cacheCluster(sgData, clusterCaches);
@@ -349,9 +383,11 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
               .getScalingConfigurations()
               .get(0)
               .getScalingConfigurationName());
-      attributes.put(
-          "scalingConfiguration",
-          data.scalingConfigurationsResponse.getScalingConfigurations().get(0));
+      ScalingConfiguration scalingConfiguration =
+          data.scalingConfigurationsResponse.getScalingConfigurations().get(0);
+      Map<String, Object> map = objectMapper.convertValue(scalingConfiguration, Map.class);
+      map.put("securityGroupName", data.securityGroupName);
+      attributes.put("scalingConfiguration", map);
     } else {
       attributes.put("scalingConfiguration", new ScalingConfiguration());
     }
@@ -400,6 +436,7 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
     final String launchConfig;
     final Set<String> loadBalancerNames = new HashSet<>();
     final Set<String> instanceIds = new HashSet<>();
+    final String securityGroupName;
 
     public SgData(
         ScalingGroup sg,
@@ -408,7 +445,8 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
         Map<String, String> subnetMap,
         DescribeScalingConfigurationsResponse scalingConfigurationsResponse,
         List<DescribeLoadBalancerAttributeResponse> loadBalancerAttributes,
-        List<ScalingInstance> scalingInstances) {
+        List<ScalingInstance> scalingInstances,
+        String securityGroupName) {
 
       this.sg = sg;
       this.scalingConfigurationsResponse = scalingConfigurationsResponse;
@@ -427,6 +465,7 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
       for (ScalingInstance scalingInstance : scalingInstances) {
         instanceIds.add(Keys.getInstanceKey(scalingInstance.getInstanceId(), account, region));
       }
+      this.securityGroupName = securityGroupName;
     }
   }
 
@@ -473,15 +512,6 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
 
   @Override
   public Collection<AgentDataType> getProvidedDataTypes() {
-    return new ArrayList<AgentDataType>() {
-      {
-        add(AUTHORITATIVE.forType(CLUSTERS.ns));
-        add(AUTHORITATIVE.forType(SERVER_GROUPS.ns));
-        add(AUTHORITATIVE.forType(APPLICATIONS.ns));
-        add(INFORMATIVE.forType(LOAD_BALANCERS.ns));
-        add(INFORMATIVE.forType(LAUNCH_CONFIGS.ns));
-        add(INFORMATIVE.forType(INSTANCES.ns));
-      }
-    };
+    return types;
   }
 }

@@ -27,6 +27,8 @@ import com.netflix.spinnaker.cats.cache.DefaultCacheData;
 import com.netflix.spinnaker.clouddriver.alicloud.controllers.AliCloudImageController.Image;
 import com.netflix.spinnaker.clouddriver.alicloud.controllers.AliCloudImageController.LookupOptions;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,20 +43,22 @@ public class AliCloudImageControllerTest {
   private final String REGION = "cn-test";
 
   final Cache cacheView = mock(Cache.class);
-
   final LookupOptions lookupOptions = mock(LookupOptions.class);
+  // final HttpServletRequest request = mock(HttpServletRequest.class);
 
   @Before
   public void testBefore() {
     when(cacheView.filterIdentifiers(anyString(), anyString())).thenAnswer(new FilterAnswer());
     when(cacheView.getAll(anyString(), any(), any())).thenAnswer(new CacheDataAnswer());
+    when(lookupOptions.getQ()).thenReturn("test");
+    // when(request.getParameterNames()).thenAnswer(new RequestAnswer());
   }
 
   @Test
   public void testList() {
     AliCloudImageController controller = new AliCloudImageController(cacheView);
     List<Image> list = controller.list(lookupOptions);
-    assertTrue(list.size() == 1);
+    assertTrue(list.size() == 2);
   }
 
   private class FilterAnswer implements Answer<List<String>> {
@@ -79,6 +83,15 @@ public class AliCloudImageControllerTest {
               "alicloud:images:ali-account:cn-hangzhou:win_xxx_xxx_xxx.vhd", attributes, null);
       cacheDatas.add(cacheData1);
       return cacheDatas;
+    }
+  }
+
+  private class RequestAnswer implements Answer<Enumeration<String>> {
+    @Override
+    public Enumeration<String> answer(InvocationOnMock invocation) throws Throwable {
+      List<String> list = new ArrayList<>();
+      Enumeration<String> enumeration = Collections.enumeration(list);
+      return enumeration;
     }
   }
 }

@@ -42,11 +42,10 @@ import com.netflix.spinnaker.clouddriver.cache.OnDemandAgent;
 import com.netflix.spinnaker.clouddriver.cache.OnDemandMetricsSupport;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class AliCloudSecurityGroupCachingAgent
     implements CachingAgent, OnDemandAgent, AccountAware {
@@ -64,13 +63,13 @@ public class AliCloudSecurityGroupCachingAgent
     this.client = client;
   }
 
-  static final Set<AgentDataType> types = new HashSet<>();
-
-  static {
-    AgentDataType securityGroups =
-        new AgentDataType(Keys.Namespace.SECURITY_GROUPS.ns, AUTHORITATIVE);
-    types.add(securityGroups);
-  }
+  static final Collection<AgentDataType> types =
+      Collections.unmodifiableCollection(
+          new ArrayList<AgentDataType>() {
+            {
+              add(AUTHORITATIVE.forType(Keys.Namespace.SECURITY_GROUPS.ns));
+            }
+          });
 
   @Override
   public CacheResult loadData(ProviderCache providerCache) {

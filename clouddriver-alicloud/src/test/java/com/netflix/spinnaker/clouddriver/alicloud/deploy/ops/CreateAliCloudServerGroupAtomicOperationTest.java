@@ -23,7 +23,7 @@ import com.aliyuncs.ess.model.v20140828.CreateScalingConfigurationResponse;
 import com.aliyuncs.ess.model.v20140828.CreateScalingGroupResponse;
 import com.aliyuncs.ess.model.v20140828.EnableScalingGroupResponse;
 import com.aliyuncs.exceptions.ClientException;
-import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.CreateAliCloudServerGroupDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.BasicAliCloudDeployDescription;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -45,12 +45,12 @@ public class CreateAliCloudServerGroupAtomicOperationTest extends CommonAtomicOp
   public void testOperate() {
     CreateAliCloudServerGroupAtomicOperation operation =
         new CreateAliCloudServerGroupAtomicOperation(
-            buildDescription(), objectMapper, clientFactory);
+            buildDescription(), objectMapper, clientFactory, clusterProviders);
     operation.operate(priorOutputs);
   }
 
-  private CreateAliCloudServerGroupDescription buildDescription() {
-    CreateAliCloudServerGroupDescription description = new CreateAliCloudServerGroupDescription();
+  private BasicAliCloudDeployDescription buildDescription() {
+    BasicAliCloudDeployDescription description = new BasicAliCloudDeployDescription();
     description.setRegion(REGION);
     description.setCredentials(credentials);
     description.setScalingGroupName("test-Name");
@@ -59,6 +59,9 @@ public class CreateAliCloudServerGroupAtomicOperationTest extends CommonAtomicOp
     request.setScalingConfigurationName("test-ScalingConfigurationName");
     scalingConfigurations.add(request);
     description.setScalingConfigurations(scalingConfigurations);
+    description.setApplication("spin63");
+    description.setStack("test");
+    description.setFreeFormDetails("test");
     return description;
   }
 

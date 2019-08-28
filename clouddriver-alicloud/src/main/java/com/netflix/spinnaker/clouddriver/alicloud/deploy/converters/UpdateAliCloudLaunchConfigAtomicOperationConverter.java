@@ -32,7 +32,12 @@ import org.springframework.stereotype.Component;
 public class UpdateAliCloudLaunchConfigAtomicOperationConverter
     extends AbstractAtomicOperationsCredentialsSupport {
 
-  @Autowired ClientFactory clientFactory;
+  private final ClientFactory clientFactory;
+
+  @Autowired
+  public UpdateAliCloudLaunchConfigAtomicOperationConverter(ClientFactory clientFactory) {
+    this.clientFactory = clientFactory;
+  }
 
   @Override
   public AtomicOperation convertOperation(Map input) {

@@ -32,7 +32,12 @@ import org.springframework.stereotype.Component;
 public class UpsertAliCloudLoadBalancerAtomicOperationConverter
     extends AbstractAtomicOperationsCredentialsSupport {
 
-  @Autowired ClientFactory clientFactory;
+  private final ClientFactory clientFactory;
+
+  @Autowired
+  public UpsertAliCloudLoadBalancerAtomicOperationConverter(ClientFactory clientFactory) {
+    this.clientFactory = clientFactory;
+  }
 
   @Override
   public AtomicOperation convertOperation(Map input) {

@@ -32,7 +32,12 @@ import org.springframework.stereotype.Component;
 public class DeleteAliCloudLoadBalancerAtomicOperationConverter
     extends AbstractAtomicOperationsCredentialsSupport {
 
-  @Autowired ClientFactory clientFactory;
+  private final ClientFactory clientFactory;
+
+  @Autowired
+  public DeleteAliCloudLoadBalancerAtomicOperationConverter(ClientFactory clientFactory) {
+    this.clientFactory = clientFactory;
+  }
 
   @Override
   public AtomicOperation convertOperation(Map input) {

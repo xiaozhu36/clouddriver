@@ -29,7 +29,7 @@ import org.junit.Test;
 public class DeleteAliCloudLoadBalancerAtomicOperationConverterTest extends CommonConverter {
 
   DeleteAliCloudLoadBalancerAtomicOperationConverter converter =
-      new DeleteAliCloudLoadBalancerAtomicOperationConverter();
+      new DeleteAliCloudLoadBalancerAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

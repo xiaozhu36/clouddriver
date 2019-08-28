@@ -42,7 +42,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -214,7 +216,7 @@ public class AliCloudClusterProvider
 
     serverGroup.setResult(serverGroupCache.getAttributes());
 
-    // buid image info
+    // build image info
     Map<String, Object> scalingConfiguration = (Map) attributes.get("scalingConfiguration");
     serverGroup.setLaunchConfig(scalingConfiguration);
     Map<String, Object> image = new HashMap<>();
@@ -230,7 +232,12 @@ public class AliCloudClusterProvider
 
   @Override
   public ServerGroup getServerGroup(String account, String region, String name) {
-    return null;
+    String serverGroupKey = Keys.getServerGroupKey(name, account, region);
+    CacheData serverGroupData = cacheView.get(SERVER_GROUPS.ns, serverGroupKey);
+    if (serverGroupData == null) {
+      return null;
+    }
+    return bulidServerGroup(serverGroupData);
   }
 
   @Override
@@ -245,33 +252,40 @@ public class AliCloudClusterProvider
 
   @Override
   public Collection<String> getServerGroupIdentifiers(String account, String region) {
-    return null;
+    account = Optional.ofNullable(account).orElse("*");
+    region = Optional.ofNullable(region).orElse("*");
+    return cacheView.filterIdentifiers(
+        SERVER_GROUPS.ns, Keys.getServerGroupKey("*", "*", account, region));
   }
 
   @Override
   public String buildServerGroupIdentifier(String account, String region, String serverGroupName) {
-    return null;
+    return Keys.getServerGroupKey(serverGroupName, account, region);
   }
 
   @Override
   public Map<String, Set<AliCloudCluster>> getClusters() {
-    return null;
+    Collection<CacheData> clusterData = cacheView.getAll(CLUSTERS.ns);
+    Collection<AliCloudCluster> clusters = translateClusters(clusterData, false);
+    return mapResponse(clusters);
   }
 
   @Override
   public Map<String, Set<AliCloudCluster>> getClusterSummaries(String application) {
-    return null;
+    return getClusterDetails(application);
   }
 
   @Override
   public Set<AliCloudCluster> getClusters(String application, String account) {
-    return null;
+    Map<String, Set<AliCloudCluster>> clusterDetails = getClusterDetails(application);
+    return clusterDetails.isEmpty() ? null : clusterDetails.get(account);
   }
 
   @Override
   public Set<AliCloudCluster> getClusters(
       String application, String account, boolean includeDetails) {
-    return null;
+    Map<String, Set<AliCloudCluster>> clusterDetails = getClusterDetails(application);
+    return clusterDetails.isEmpty() ? null : clusterDetails.get(account);
   }
 
   @Override
@@ -284,5 +298,20 @@ public class AliCloudClusterProvider
     return translateClusters(clusters, true).size() > 0
         ? translateClusters(clusters, true).get(0)
         : null;
+  }
+
+  private static Map<String, Set<AliCloudCluster>> mapResponse(
+      Collection<AliCloudCluster> clusters) {
+    Map<String, Set<AliCloudCluster>> results =
+        clusters.stream()
+            .collect(Collectors.groupingBy(AliCloudCluster::getAccountName, Collectors.toSet()));
+    // Map<String, Set<AliCloudCluster>> results =
+    // clusters.stream().collect(Collectors.toMap(AliCloudCluster::getAccountName, p ->
+    // Collections.singleton(p), (x, y) ->{
+    //  Set<AliCloudCluster> set = new HashSet<>(x);
+    //  set.addAll(y);
+    //  return set;
+    // }));
+    return results;
   }
 }

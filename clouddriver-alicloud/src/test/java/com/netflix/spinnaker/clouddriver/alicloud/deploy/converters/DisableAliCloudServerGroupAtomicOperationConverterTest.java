@@ -29,7 +29,7 @@ import org.junit.Test;
 public class DisableAliCloudServerGroupAtomicOperationConverterTest extends CommonConverter {
 
   DisableAliCloudServerGroupAtomicOperationConverter converter =
-      new DisableAliCloudServerGroupAtomicOperationConverter();
+      new DisableAliCloudServerGroupAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

@@ -29,10 +29,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.AliCloudServerGroupNameResolver;
-import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.CreateAliCloudServerGroupDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.BasicAliCloudDeployDescription;
 import com.netflix.spinnaker.clouddriver.deploy.DeploymentResult;
 import com.netflix.spinnaker.clouddriver.model.ClusterProvider;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
+import groovy.util.logging.Slf4j;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,25 +41,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation<DeploymentResult> {
 
-  @Autowired List<ClusterProvider> clusterProviders;
+  private final Logger log =
+      LoggerFactory.getLogger(CreateAliCloudServerGroupAtomicOperation.class);
+
+  private final List<ClusterProvider> clusterProviders;
 
   private final ObjectMapper objectMapper;
 
-  private final CreateAliCloudServerGroupDescription description;
+  private final BasicAliCloudDeployDescription description;
 
   private final ClientFactory clientFactory;
 
   public CreateAliCloudServerGroupAtomicOperation(
-      CreateAliCloudServerGroupDescription description,
+      BasicAliCloudDeployDescription description,
       ObjectMapper objectMapper,
-      ClientFactory clientFactory) {
+      ClientFactory clientFactory,
+      List<ClusterProvider> clusterProviders) {
     this.description = description;
     this.objectMapper = objectMapper;
     this.clientFactory = clientFactory;
+    this.clusterProviders = clusterProviders;
   }
 
   @Override
@@ -94,10 +102,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
       createScalingGroupResponse = client.getAcsResponse(createScalingGroupRequest);
       description.setScalingGroupId(createScalingGroupResponse.getScalingGroupId());
     } catch (ServerException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
@@ -118,10 +126,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
         configurationResponse = client.getAcsResponse(configurationRequest);
         scalingConfigurationId = configurationResponse.getScalingConfigurationId();
       } catch (ServerException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       } catch (ClientException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       }
     }
@@ -137,10 +145,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
     try {
       enableScalingGroupResponse = client.getAcsResponse(enableScalingGroupRequest);
     } catch (ServerException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
@@ -149,8 +157,7 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
     return result;
   }
 
-  private void buildResult(
-      CreateAliCloudServerGroupDescription description, DeploymentResult result) {
+  private void buildResult(BasicAliCloudDeployDescription description, DeploymentResult result) {
 
     List<String> serverGroupNames = new ArrayList<>();
     serverGroupNames.add(description.getRegion() + ":" + description.getScalingGroupName());

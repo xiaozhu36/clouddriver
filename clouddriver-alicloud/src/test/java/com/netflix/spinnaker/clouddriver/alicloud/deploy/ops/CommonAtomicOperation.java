@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentials;
+import com.netflix.spinnaker.clouddriver.model.ClusterProvider;
 import java.util.List;
 import spock.lang.Subject;
 
@@ -38,6 +39,7 @@ public class CommonAtomicOperation {
   public static AliCloudCredentials credentials = mock(AliCloudCredentials.class);
   public static IAcsClient client = mock(IAcsClient.class);
   public static ClientFactory clientFactory = mock(ClientFactory.class);
+  static List<ClusterProvider> clusterProviders = mock(List.class);
 
   static {
     when(credentials.getName()).thenReturn(ACCOUNT);

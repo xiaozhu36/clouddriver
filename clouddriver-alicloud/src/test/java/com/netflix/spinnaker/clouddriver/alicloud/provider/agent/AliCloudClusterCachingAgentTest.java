@@ -25,6 +25,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.aliyuncs.ecs.model.v20140526.DescribeInstancesResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeInstancesResponse.Instance;
+import com.aliyuncs.ecs.model.v20140526.DescribeSecurityGroupsResponse;
+import com.aliyuncs.ecs.model.v20140526.DescribeSecurityGroupsResponse.SecurityGroup;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingConfigurationsResponse;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingConfigurationsResponse.ScalingConfiguration;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingGroupsResponse;
@@ -60,8 +64,11 @@ public class AliCloudClusterCachingAgentTest extends CommonCachingAgentTest {
     when(client.getAcsResponse(any()))
         .thenAnswer(new ScalingGroupsAnswer())
         .thenAnswer(new ScalingConfigurationsAnswer())
+        .thenAnswer(new DescribeSecurityGroupsAnswer())
         .thenAnswer(new LoadBalancerAttributeAnswer())
-        .thenAnswer(new ScalingInstancesAnswer());
+        .thenAnswer(new ScalingInstancesAnswer())
+        .thenAnswer(new DescribeInstancesAnswer())
+        .thenAnswer(new DescribeScalingInstancesAnswer());
   }
 
   @Test
@@ -166,6 +173,46 @@ public class AliCloudClusterCachingAgentTest extends CommonCachingAgentTest {
 
       scalingInstances.add(instance);
       response.setScalingInstances(scalingInstances);
+      return response;
+    }
+  }
+
+  private class DescribeSecurityGroupsAnswer implements Answer<DescribeSecurityGroupsResponse> {
+
+    @Override
+    public DescribeSecurityGroupsResponse answer(InvocationOnMock invocation) throws Throwable {
+      DescribeSecurityGroupsResponse response = new DescribeSecurityGroupsResponse();
+      List<SecurityGroup> securityGroups = new ArrayList<>();
+      SecurityGroup securityGroup = new SecurityGroup();
+      securityGroup.setSecurityGroupName("test-SecurityGroupName");
+      securityGroups.add(securityGroup);
+      response.setSecurityGroups(securityGroups);
+      return response;
+    }
+  }
+
+  private class DescribeScalingInstancesAnswer implements Answer<DescribeScalingInstancesResponse> {
+    @Override
+    public DescribeScalingInstancesResponse answer(InvocationOnMock invocation) throws Throwable {
+      DescribeScalingInstancesResponse response = new DescribeScalingInstancesResponse();
+      List<ScalingInstance> scalingInstances = new ArrayList<>();
+      ScalingInstance scalingInstance = new ScalingInstance();
+      scalingInstance.setInstanceId("test-InstanceId");
+      scalingInstances.add(scalingInstance);
+      response.setScalingInstances(scalingInstances);
+      return response;
+    }
+  }
+
+  private class DescribeInstancesAnswer implements Answer<DescribeInstancesResponse> {
+    @Override
+    public DescribeInstancesResponse answer(InvocationOnMock invocation) throws Throwable {
+      DescribeInstancesResponse response = new DescribeInstancesResponse();
+      List<Instance> instances = new ArrayList<>();
+      Instance instance = new Instance();
+      instance.setInstanceName("test-InstanceName");
+      instances.add(instance);
+      response.setInstances(instances);
       return response;
     }
   }

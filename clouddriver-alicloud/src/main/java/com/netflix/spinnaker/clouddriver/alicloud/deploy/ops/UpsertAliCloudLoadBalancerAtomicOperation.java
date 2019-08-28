@@ -44,15 +44,21 @@ import com.netflix.spinnaker.clouddriver.data.task.Task;
 import com.netflix.spinnaker.clouddriver.data.task.TaskRepository;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import groovy.util.logging.Slf4j;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Slf4j
 public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperation<Map> {
+
+  private final Logger logger =
+      LoggerFactory.getLogger(UpsertAliCloudLoadBalancerAtomicOperation.class);
 
   private final ObjectMapper objectMapper;
 
@@ -105,10 +111,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
       }
 
     } catch (ServerException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
@@ -129,10 +135,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
         description.setLoadBalancerId(loadBalancerResponse.getLoadBalancerId());
 
       } catch (ServerException e) {
-        e.printStackTrace();
+        logger.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       } catch (ClientException e) {
-        e.printStackTrace();
+        logger.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       }
     }
@@ -144,10 +150,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
     try {
       createListener(loadBalancerT == null ? false : true, client);
     } catch (ServerException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
@@ -158,10 +164,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
     try {
       client.getAcsResponse(statusRequest);
     } catch (ServerException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      logger.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
@@ -170,26 +176,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
     return resultMap;
   }
 
-  private void createListener(boolean flag, IAcsClient client)
-      throws ClientException, ServerException {
+  private void createListener(boolean whetherToCreate, IAcsClient client) throws ClientException {
 
-    if (!flag) {
-      for (Listener listener : description.getListeners()) {
-        switch (listener.getListenerProtocal()) {
-          case HTTPS:
-            createHTTPSListener(client, listener);
-            break;
-          case TCP:
-            createTCPListener(client, listener);
-            break;
-          case UDP:
-            createUDPListener(client, listener);
-            break;
-          default:
-            createHTTPListener(client, listener);
-            break;
-        }
-      }
+    if (!whetherToCreate) {
+      addListener(description.getListeners(), client);
     } else {
       // query loadbalancer Instance information，Get the current instance listener information
       // (listener type, port number)
@@ -291,51 +281,52 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
         }
       }
       // Create listeners
-      for (Listener listener : createListenerList) {
-        switch (listener.getListenerProtocal()) {
-          case HTTPS:
-            createHTTPSListener(client, listener);
-            break;
-          case TCP:
-            createTCPListener(client, listener);
-            break;
-          case UDP:
-            createUDPListener(client, listener);
-            break;
-          default:
-            createHTTPListener(client, listener);
-            break;
-        }
+      addListener(new ArrayList<>(createListenerList), client);
+    }
+  }
+
+  private void addListener(List<Listener> createListenerList, IAcsClient client)
+      throws ClientException {
+    for (Listener listener : createListenerList) {
+      switch (listener.getListenerProtocal()) {
+        case HTTPS:
+          createHTTPSListener(client, listener);
+          break;
+        case TCP:
+          createTCPListener(client, listener);
+          break;
+        case UDP:
+          createUDPListener(client, listener);
+          break;
+        default:
+          createHTTPListener(client, listener);
+          break;
       }
     }
   }
 
-  private void createHTTPListener(IAcsClient client, Listener listener)
-      throws ClientException, ServerException {
+  private void createHTTPListener(IAcsClient client, Listener listener) throws ClientException {
     CreateLoadBalancerHTTPListenerRequest httpListenerRequest =
         objectMapper.convertValue(listener, CreateLoadBalancerHTTPListenerRequest.class);
     httpListenerRequest.setLoadBalancerId(description.getLoadBalancerId());
     client.getAcsResponse(httpListenerRequest);
   }
 
-  private void createHTTPSListener(IAcsClient client, Listener listener)
-      throws ClientException, ServerException {
+  private void createHTTPSListener(IAcsClient client, Listener listener) throws ClientException {
     CreateLoadBalancerHTTPSListenerRequest createHTTPSListenerRequest =
         objectMapper.convertValue(listener, CreateLoadBalancerHTTPSListenerRequest.class);
     createHTTPSListenerRequest.setLoadBalancerId(description.getLoadBalancerId());
     client.getAcsResponse(createHTTPSListenerRequest);
   }
 
-  private void createTCPListener(IAcsClient client, Listener listener)
-      throws ClientException, ServerException {
+  private void createTCPListener(IAcsClient client, Listener listener) throws ClientException {
     CreateLoadBalancerTCPListenerRequest createTCPListenerRequest =
         objectMapper.convertValue(listener, CreateLoadBalancerTCPListenerRequest.class);
     createTCPListenerRequest.setLoadBalancerId(description.getLoadBalancerId());
     client.getAcsResponse(createTCPListenerRequest);
   }
 
-  private void createUDPListener(IAcsClient client, Listener listener)
-      throws ClientException, ServerException {
+  private void createUDPListener(IAcsClient client, Listener listener) throws ClientException {
     CreateLoadBalancerUDPListenerRequest createUDPListenerRequest =
         objectMapper.convertValue(listener, CreateLoadBalancerUDPListenerRequest.class);
     createUDPListenerRequest.setLoadBalancerId(description.getLoadBalancerId());

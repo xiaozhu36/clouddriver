@@ -18,7 +18,7 @@ package com.netflix.spinnaker.clouddriver.alicloud.deploy.converters;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.CreateAliCloudServerGroupDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.BasicAliCloudDeployDescription;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.ops.CreateAliCloudServerGroupAtomicOperation;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import org.junit.Test;
 public class CreateAliCloudServerGroupAtomicOperationConverterTest extends CommonConverter {
 
   CreateAliCloudServerGroupAtomicOperationConverter converter =
-      new CreateAliCloudServerGroupAtomicOperationConverter();
+      new CreateAliCloudServerGroupAtomicOperationConverter(clientFactory, clusterProviders);
 
   @Before
   public void testBefore() {
@@ -45,10 +45,9 @@ public class CreateAliCloudServerGroupAtomicOperationConverterTest extends Commo
 
   @Test
   public void testConvertDescription() {
-    CreateAliCloudServerGroupDescription createAliCloudServerGroupDescription =
+    BasicAliCloudDeployDescription basicAliCloudDeployDescription =
         converter.convertDescription(buildDescription());
-    assertTrue(
-        createAliCloudServerGroupDescription instanceof CreateAliCloudServerGroupDescription);
+    assertTrue(basicAliCloudDeployDescription instanceof BasicAliCloudDeployDescription);
   }
 
   private Map buildDescription() {

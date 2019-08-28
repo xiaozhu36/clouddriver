@@ -20,15 +20,21 @@ import com.aliyuncs.IAcsClient;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.slb.model.v20140515.DeleteLoadBalancerRequest;
-import com.aliyuncs.slb.model.v20140515.DeleteLoadBalancerResponse;
 import com.aliyuncs.slb.model.v20140515.DescribeLoadBalancersRequest;
 import com.aliyuncs.slb.model.v20140515.DescribeLoadBalancersResponse;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.UpsertAliCloudLoadBalancerDescription;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
+import groovy.util.logging.Slf4j;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class DeleteAliCloudLoadBalancerClassicAtomicOperation implements AtomicOperation<Void> {
+
+  private final Logger log =
+      LoggerFactory.getLogger(DeleteAliCloudLoadBalancerClassicAtomicOperation.class);
 
   private final UpsertAliCloudLoadBalancerDescription description;
 
@@ -61,24 +67,23 @@ public class DeleteAliCloudLoadBalancerClassicAtomicOperation implements AtomicO
       }
 
     } catch (ServerException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 
     if (loadBalancerT != null) {
       DeleteLoadBalancerRequest request = new DeleteLoadBalancerRequest();
       request.setLoadBalancerId(loadBalancerT.getLoadBalancerId());
-      DeleteLoadBalancerResponse response;
       try {
-        response = client.getAcsResponse(request);
+        client.getAcsResponse(request);
       } catch (ServerException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       } catch (ClientException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       }
     }

@@ -27,7 +27,7 @@ public class ClientFactory {
   public IAcsClient createClient(String region, String accessKeyId, String accessSecretKey) {
     DefaultProfile profile = DefaultProfile.getProfile(region, accessKeyId, accessSecretKey);
     DefaultAcsClient defaultAcsClient = new DefaultAcsClient(profile);
-    defaultAcsClient.appendUserAgent("Spinnaker", "Clouddriver v1.0");
+    defaultAcsClient.appendUserAgent("Spinnaker", "Clouddriver/0.1.0");
     return defaultAcsClient;
   }
 }

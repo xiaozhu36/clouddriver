@@ -167,7 +167,7 @@ public class Keys implements KeyParser {
     return getServerGroupKey(names.getCluster(), names.getGroup(), account, region);
   }
 
-  static String getServerGroupKey(
+  public static String getServerGroupKey(
       String cluster, String autoScalingGroupName, String account, String region) {
     return ID
         + SEPARATOR

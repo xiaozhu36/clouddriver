@@ -29,7 +29,7 @@ import org.junit.Test;
 public class ResizeAliCloudServerGroupAtomicOperationConverterTest extends CommonConverter {
 
   ResizeAliCloudServerGroupAtomicOperationConverter converter =
-      new ResizeAliCloudServerGroupAtomicOperationConverter();
+      new ResizeAliCloudServerGroupAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

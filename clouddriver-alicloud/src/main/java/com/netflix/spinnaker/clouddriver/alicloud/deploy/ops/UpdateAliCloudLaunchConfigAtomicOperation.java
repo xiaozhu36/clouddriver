@@ -27,9 +27,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.UpdateAliCloudLaunchConfigDescription;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
+import groovy.util.logging.Slf4j;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class UpdateAliCloudLaunchConfigAtomicOperation implements AtomicOperation<Void> {
+
+  private final Logger log =
+      LoggerFactory.getLogger(UpdateAliCloudLaunchConfigAtomicOperation.class);
 
   private final UpdateAliCloudLaunchConfigDescription description;
 
@@ -72,10 +79,10 @@ public class UpdateAliCloudLaunchConfigAtomicOperation implements AtomicOperatio
         client.getAcsResponse(configurationRequest);
       }
     } catch (ServerException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     } catch (ClientException e) {
-      e.printStackTrace();
+      log.info(e.getMessage());
       throw new IllegalStateException(e.getMessage());
     }
 

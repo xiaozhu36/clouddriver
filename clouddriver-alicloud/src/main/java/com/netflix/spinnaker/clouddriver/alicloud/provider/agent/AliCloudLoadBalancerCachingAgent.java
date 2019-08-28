@@ -61,6 +61,7 @@ import com.netflix.spinnaker.clouddriver.cache.OnDemandAgent;
 import com.netflix.spinnaker.clouddriver.cache.OnDemandMetricsSupport;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +69,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAware, OnDemandAgent {
+
   private AliProvider aliProvider;
   private AliCloudClientProvider aliCloudClientProvider;
   private AliCloudCredentials account;
@@ -105,6 +107,15 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
     this.client = client;
   }
 
+  static final Collection<AgentDataType> types =
+      Collections.unmodifiableCollection(
+          new ArrayList<AgentDataType>() {
+            {
+              add(AUTHORITATIVE.forType(LOAD_BALANCERS.ns));
+              add(INFORMATIVE.forType(INSTANCES.ns));
+            }
+          });
+
   @Override
   public String getAccountName() {
     return null;
@@ -112,18 +123,11 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
 
   @Override
   public Collection<AgentDataType> getProvidedDataTypes() {
-    return new ArrayList<AgentDataType>() {
-      {
-        add(AUTHORITATIVE.forType(LOAD_BALANCERS.ns));
-        add(INFORMATIVE.forType(INSTANCES.ns));
-      }
-    };
+    return types;
   }
 
   @Override
   public CacheResult loadData(ProviderCache providerCache) {
-    logger.info(this.getClass().getSimpleName() + " is working 2");
-
     List<DescribeLoadBalancersResponse.LoadBalancer> loadBalancers = new ArrayList<>();
     Map<String, DescribeLoadBalancerAttributeResponse> loadBalancerAttributes = new HashMap<>(16);
 
@@ -131,8 +135,8 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
     DescribeLoadBalancersResponse queryResponse;
     try {
       queryResponse = client.getAcsResponse(queryRequest);
-      if (queryResponse.getLoadBalancers().size() == 0) {
-        return null;
+      if (queryResponse.getLoadBalancers().isEmpty()) {
+        return new DefaultCacheResult(new HashMap<>(16));
       }
 
       loadBalancers.addAll(queryResponse.getLoadBalancers());
@@ -167,8 +171,6 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
 
   @Override
   public OnDemandResult handle(ProviderCache providerCache, Map<String, ? extends Object> data) {
-    logger.info(this.getClass().getSimpleName() + " is working 3");
-
     List<DescribeLoadBalancersResponse.LoadBalancer> loadBalancers = new ArrayList<>();
     Map<String, DescribeLoadBalancerAttributeResponse> loadBalancerAttributes = new HashMap<>(16);
 
@@ -228,7 +230,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
                   (String) data.get("loadBalancerName"),
                   account.getName(),
                   region,
-                  (String) data.get("cpvId"))));
+                  (String) data.get("vpcId"))));
     } else {
       metricsSupport.onDemandStore(
           () -> {
@@ -247,7 +249,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
                         (String) data.get("loadBalancerName"),
                         account.getName(),
                         region,
-                        (String) data.get("cpvId")),
+                        (String) data.get("vpcId")),
                     map,
                     Maps.newHashMap());
 
@@ -287,7 +289,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
         Map<String, Object> portAndProtocalMap =
             objectMapper.convertValue(listenerPortAndProtocal, Map.class);
 
-        Map<String, Object> map3 = new HashMap<>(16);
+        Map<String, Object> listenerMap = new HashMap<>(16);
 
         switch (listenerProtocal) {
           case "HTTPS":
@@ -298,7 +300,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
             DescribeLoadBalancerHTTPSListenerAttributeResponse httpsListenerAttributeResponse;
             try {
               httpsListenerAttributeResponse = client.getAcsResponse(httpsListenerAttributeRequest);
-              map3 = objectMapper.convertValue(httpsListenerAttributeResponse, Map.class);
+              listenerMap = objectMapper.convertValue(httpsListenerAttributeResponse, Map.class);
             } catch (ServerException e) {
               e.printStackTrace();
             } catch (ClientException e) {
@@ -314,7 +316,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
             DescribeLoadBalancerTCPListenerAttributeResponse tcpListenerAttributeResponse;
             try {
               tcpListenerAttributeResponse = client.getAcsResponse(tcpListenerAttributeRequest);
-              map3 = objectMapper.convertValue(tcpListenerAttributeResponse, Map.class);
+              listenerMap = objectMapper.convertValue(tcpListenerAttributeResponse, Map.class);
             } catch (ServerException e) {
               e.printStackTrace();
             } catch (ClientException e) {
@@ -330,7 +332,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
             DescribeLoadBalancerUDPListenerAttributeResponse udpListenerAttributeResponse;
             try {
               udpListenerAttributeResponse = client.getAcsResponse(udpListenerAttributeRequest);
-              map3 = objectMapper.convertValue(udpListenerAttributeResponse, Map.class);
+              listenerMap = objectMapper.convertValue(udpListenerAttributeResponse, Map.class);
             } catch (ServerException e) {
               e.printStackTrace();
             } catch (ClientException e) {
@@ -346,7 +348,7 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
             DescribeLoadBalancerHTTPListenerAttributeResponse httpListenerAttributeResponse;
             try {
               httpListenerAttributeResponse = client.getAcsResponse(httpListenerAttributeRequest);
-              map3 = objectMapper.convertValue(httpListenerAttributeResponse, Map.class);
+              listenerMap = objectMapper.convertValue(httpListenerAttributeResponse, Map.class);
             } catch (ServerException e) {
               e.printStackTrace();
             } catch (ClientException e) {
@@ -354,8 +356,8 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
             }
             break;
         }
-        map3.putAll(portAndProtocalMap);
-        listenerPortsAndProtocal.add(map3);
+        listenerMap.putAll(portAndProtocalMap);
+        listenerPortsAndProtocal.add(listenerMap);
       }
 
       attributeMap.put("listenerPortsAndProtocal", listenerPortsAndProtocal);
@@ -397,7 +399,6 @@ public class AliCloudLoadBalancerCachingAgent implements CachingAgent, AccountAw
 
   @Override
   public boolean handles(OnDemandType type, String cloudProvider) {
-    logger.info(this.getClass().getSimpleName() + " is working 1");
     return false;
   }
 

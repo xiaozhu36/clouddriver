@@ -29,7 +29,7 @@ import org.junit.Test;
 public class UpdateAliCloudLaunchConfigAtomicOperationConverterTest extends CommonConverter {
 
   UpdateAliCloudLaunchConfigAtomicOperationConverter converter =
-      new UpdateAliCloudLaunchConfigAtomicOperationConverter();
+      new UpdateAliCloudLaunchConfigAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

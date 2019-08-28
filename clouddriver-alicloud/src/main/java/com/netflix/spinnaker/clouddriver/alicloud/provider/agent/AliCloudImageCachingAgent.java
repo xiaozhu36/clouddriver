@@ -16,7 +16,8 @@
 package com.netflix.spinnaker.clouddriver.alicloud.provider.agent;
 
 import static com.netflix.spinnaker.cats.agent.AgentDataType.Authority.AUTHORITATIVE;
-import static com.netflix.spinnaker.clouddriver.core.provider.agent.Namespace.*;
+import static com.netflix.spinnaker.clouddriver.core.provider.agent.Namespace.IMAGES;
+import static com.netflix.spinnaker.clouddriver.core.provider.agent.Namespace.NAMED_IMAGES;
 
 import com.aliyuncs.IAcsClient;
 import com.aliyuncs.ecs.model.v20140526.DescribeImagesRequest;
@@ -38,11 +39,10 @@ import com.netflix.spinnaker.clouddriver.alicloud.provider.AliProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentials;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class AliCloudImageCachingAgent implements CachingAgent, AccountAware {
 
@@ -59,14 +59,14 @@ public class AliCloudImageCachingAgent implements CachingAgent, AccountAware {
     this.client = client;
   }
 
-  static final Set<AgentDataType> types = new HashSet<>();
-
-  static {
-    AgentDataType images = new AgentDataType(IMAGES.ns, AUTHORITATIVE);
-    types.add(images);
-    AgentDataType namedImages = new AgentDataType(NAMED_IMAGES.ns, AUTHORITATIVE);
-    types.add(namedImages);
-  }
+  static final Collection<AgentDataType> types =
+      Collections.unmodifiableCollection(
+          new ArrayList<AgentDataType>() {
+            {
+              add(AUTHORITATIVE.forType(IMAGES.ns));
+              add(AUTHORITATIVE.forType(NAMED_IMAGES.ns));
+            }
+          });
 
   @Override
   public CacheResult loadData(ProviderCache providerCache) {

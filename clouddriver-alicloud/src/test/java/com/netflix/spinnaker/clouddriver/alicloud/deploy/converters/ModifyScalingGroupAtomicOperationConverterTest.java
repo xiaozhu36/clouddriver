@@ -29,7 +29,7 @@ import org.junit.Test;
 public class ModifyScalingGroupAtomicOperationConverterTest extends CommonConverter {
 
   ModifyScalingGroupAtomicOperationConverter converter =
-      new ModifyScalingGroupAtomicOperationConverter();
+      new ModifyScalingGroupAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

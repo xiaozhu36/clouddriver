@@ -26,9 +26,16 @@ import com.aliyuncs.exceptions.ServerException;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.DeleteAliCloudSecurityGroupDescription;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
+import groovy.util.logging.Slf4j;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class DeleteAliCloudSecurityGroupAtomicOperation implements AtomicOperation<Void> {
+
+  private final Logger log =
+      LoggerFactory.getLogger(DeleteAliCloudSecurityGroupAtomicOperation.class);
 
   private final DeleteAliCloudSecurityGroupDescription description;
 
@@ -63,10 +70,10 @@ public class DeleteAliCloudSecurityGroupAtomicOperation implements AtomicOperati
         }
 
       } catch (ServerException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       } catch (ClientException e) {
-        e.printStackTrace();
+        log.info(e.getMessage());
         throw new IllegalStateException(e.getMessage());
       }
     }

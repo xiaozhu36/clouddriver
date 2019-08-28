@@ -32,7 +32,7 @@ import org.junit.Test;
 public class UpsertAliCloudLoadBalancerAtomicOperationConverterTest extends CommonConverter {
 
   UpsertAliCloudLoadBalancerAtomicOperationConverter converter =
-      new UpsertAliCloudLoadBalancerAtomicOperationConverter();
+      new UpsertAliCloudLoadBalancerAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

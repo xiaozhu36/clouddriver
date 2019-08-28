@@ -21,9 +21,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.aliyuncs.exceptions.ClientException;
-import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesRequest;
 import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesResponse;
 import com.aliyuncs.vpc.model.v20160428.DescribeVSwitchesResponse.VSwitch;
+import com.aliyuncs.vpc.model.v20160428.DescribeVpcsResponse;
+import com.aliyuncs.vpc.model.v20160428.DescribeVpcsResponse.Vpc;
 import com.netflix.spinnaker.cats.agent.CacheResult;
 import com.netflix.spinnaker.cats.cache.CacheData;
 import com.netflix.spinnaker.clouddriver.alicloud.cache.Keys;
@@ -40,7 +41,9 @@ public class AliCloudSubnetCachingAgentTest extends CommonCachingAgentTest {
 
   @Before
   public void testBefore() throws ClientException {
-    when(client.getAcsResponse(any(DescribeVSwitchesRequest.class))).thenAnswer(new CustomAnswer());
+    when(client.getAcsResponse(any()))
+        .thenAnswer(new CustomAnswer())
+        .thenAnswer(new DescribeVpcsAnswer());
   }
 
   @Test
@@ -64,6 +67,19 @@ public class AliCloudSubnetCachingAgentTest extends CommonCachingAgentTest {
       vSwitches.add(vSwitch);
       describeVSwitchesResponse.setVSwitches(vSwitches);
       return describeVSwitchesResponse;
+    }
+  }
+
+  private class DescribeVpcsAnswer implements Answer<DescribeVpcsResponse> {
+    @Override
+    public DescribeVpcsResponse answer(InvocationOnMock invocation) throws Throwable {
+      DescribeVpcsResponse response = new DescribeVpcsResponse();
+      List<Vpc> vpcs = new ArrayList<>();
+      Vpc vpc = new Vpc();
+      vpc.setVpcName("test-VpcName");
+      vpcs.add(vpc);
+      response.setVpcs(vpcs);
+      return response;
     }
   }
 }

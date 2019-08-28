@@ -102,4 +102,8 @@ public class AliCloudLoadBalancer implements LoadBalancer {
   public String getLoadBalancerId() {
     return loadBalancerId;
   }
+
+  public void setServerGroups(Set<LoadBalancerServerGroup> serverGroups) {
+    this.serverGroups = serverGroups;
+  }
 }

@@ -29,7 +29,7 @@ import org.junit.Test;
 public class UpsertAliCloudSecurityGroupAtomicOperationConverterTest extends CommonConverter {
 
   UpsertAliCloudSecurityGroupAtomicOperationConverter converter =
-      new UpsertAliCloudSecurityGroupAtomicOperationConverter();
+      new UpsertAliCloudSecurityGroupAtomicOperationConverter(clientFactory);
 
   @Before
   public void testBefore() {

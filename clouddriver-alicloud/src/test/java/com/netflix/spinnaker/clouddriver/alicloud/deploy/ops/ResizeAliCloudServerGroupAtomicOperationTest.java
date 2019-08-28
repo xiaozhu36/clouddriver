@@ -24,6 +24,7 @@ import com.aliyuncs.ess.model.v20140828.ModifyScalingGroupResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.ResizeAliCloudServerGroupDescription;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +53,10 @@ public class ResizeAliCloudServerGroupAtomicOperationTest extends CommonAtomicOp
     description.setCredentials(credentials);
     description.setMaxSize(10);
     description.setMinSize(1);
+    LinkedHashMap<String, Integer> capacity = new LinkedHashMap<>();
+    capacity.put("max", 3);
+    capacity.put("min", 1);
+    description.setCapacity(capacity);
     return description;
   }
 
