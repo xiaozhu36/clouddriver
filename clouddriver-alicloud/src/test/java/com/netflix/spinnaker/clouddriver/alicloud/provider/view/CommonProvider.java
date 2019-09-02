@@ -19,6 +19,7 @@ import static org.mockito.Mockito.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.cats.cache.Cache;
+import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import spock.lang.Subject;
 
 public class CommonProvider {
@@ -27,6 +28,8 @@ public class CommonProvider {
   static final String REGION = "cn-test";
 
   @Subject ObjectMapper objectMapper = new ObjectMapper();
+
+  @Subject AliCloudProvider oldProvider = new AliCloudProvider();
 
   final Cache cacheView = mock(Cache.class);
 }

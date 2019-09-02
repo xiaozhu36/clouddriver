@@ -19,7 +19,6 @@ package com.netflix.spinnaker.clouddriver.alicloud.model;
 import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import com.netflix.spinnaker.clouddriver.model.LoadBalancer;
 import com.netflix.spinnaker.clouddriver.model.LoadBalancerServerGroup;
-import com.netflix.spinnaker.moniker.Moniker;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -45,8 +44,6 @@ public class AliCloudLoadBalancer implements LoadBalancer {
 
   Map<String, String> labels = new HashMap<>();
 
-  Moniker moniker = new Moniker();
-
   public AliCloudLoadBalancer(
       String account, String region, String name, String vpcId, String loadBalancerId) {
     this.account = account;
@@ -59,11 +56,6 @@ public class AliCloudLoadBalancer implements LoadBalancer {
   @Override
   public String getName() {
     return name;
-  }
-
-  @Override
-  public Moniker getMoniker() {
-    return moniker;
   }
 
   @Override

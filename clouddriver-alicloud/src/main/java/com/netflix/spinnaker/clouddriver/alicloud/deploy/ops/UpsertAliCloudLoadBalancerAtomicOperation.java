@@ -39,6 +39,7 @@ import com.aliyuncs.slb.model.v20140515.SetLoadBalancerUDPListenerAttributeReque
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.UpsertAliCloudLoadBalancerDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.alicloud.model.Listener;
 import com.netflix.spinnaker.clouddriver.data.task.Task;
 import com.netflix.spinnaker.clouddriver.data.task.TaskRepository;
@@ -112,10 +113,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
 
     } catch (ServerException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     if (loadBalancerT != null) {
@@ -136,10 +137,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
 
       } catch (ServerException e) {
         logger.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       } catch (ClientException e) {
         logger.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       }
     }
 
@@ -151,10 +152,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
       createListener(loadBalancerT == null ? false : true, client);
     } catch (ServerException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     // Restart instance
@@ -165,10 +166,10 @@ public class UpsertAliCloudLoadBalancerAtomicOperation implements AtomicOperatio
       client.getAcsResponse(statusRequest);
     } catch (ServerException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       logger.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     resultMap.put(description.getLoadBalancerName(), description.getLoadBalancerId());

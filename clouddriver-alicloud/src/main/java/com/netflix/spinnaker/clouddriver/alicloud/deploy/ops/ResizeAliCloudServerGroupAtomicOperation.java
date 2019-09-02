@@ -25,6 +25,7 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.ResizeAliCloudServerGroupDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import groovy.util.logging.Slf4j;
 import java.util.LinkedHashMap;
@@ -72,10 +73,10 @@ public class ResizeAliCloudServerGroupAtomicOperation implements AtomicOperation
 
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     return null;

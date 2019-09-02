@@ -45,7 +45,7 @@ public class AliCloudLoadBalancerProviderTest extends CommonProvider {
   @Test
   public void testGetApplicationLoadBalancers() {
     AliCloudLoadBalancerProvider provider =
-        new AliCloudLoadBalancerProvider(objectMapper, cacheView);
+        new AliCloudLoadBalancerProvider(objectMapper, cacheView, oldProvider);
     Set<AliCloudLoadBalancer> applicationLoadBalancers =
         provider.getApplicationLoadBalancers("test-application");
     assertTrue(applicationLoadBalancers.size() == 1);
@@ -54,7 +54,7 @@ public class AliCloudLoadBalancerProviderTest extends CommonProvider {
   @Test
   public void testByAccountAndRegionAndName() {
     AliCloudLoadBalancerProvider provider =
-        new AliCloudLoadBalancerProvider(objectMapper, cacheView);
+        new AliCloudLoadBalancerProvider(objectMapper, cacheView, oldProvider);
     List<ResultDetails> lbName = provider.byAccountAndRegionAndName(ACCOUNT, REGION, "lbName");
     assertTrue(lbName.size() == 1);
   }

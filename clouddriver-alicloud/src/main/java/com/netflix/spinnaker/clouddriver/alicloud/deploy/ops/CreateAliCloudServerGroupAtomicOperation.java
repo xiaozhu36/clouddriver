@@ -30,6 +30,7 @@ import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.AliCloudServerGroupNameResolver;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.BasicAliCloudDeployDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.deploy.DeploymentResult;
 import com.netflix.spinnaker.clouddriver.model.ClusterProvider;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
@@ -103,10 +104,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
       description.setScalingGroupId(createScalingGroupResponse.getScalingGroupId());
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     if (StringUtils.isEmpty(description.getScalingGroupId())) {
@@ -127,10 +128,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
         scalingConfigurationId = configurationResponse.getScalingConfigurationId();
       } catch (ServerException e) {
         log.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       } catch (ClientException e) {
         log.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       }
     }
 
@@ -146,10 +147,10 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
       enableScalingGroupResponse = client.getAcsResponse(enableScalingGroupRequest);
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     buildResult(description, result);

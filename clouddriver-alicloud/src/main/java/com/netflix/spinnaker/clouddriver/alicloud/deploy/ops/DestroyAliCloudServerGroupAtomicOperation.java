@@ -25,6 +25,7 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.DestroyAliCloudServerGroupDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import groovy.util.logging.Slf4j;
 import java.util.List;
@@ -62,7 +63,7 @@ public class DestroyAliCloudServerGroupAtomicOperation implements AtomicOperatio
     } else if (StringUtils.isNotEmpty(description.getScalingGroupName())) {
       describeScalingGroupsRequest.setScalingGroupName(description.getScalingGroupName());
     } else {
-      throw new IllegalStateException("Not passed Server Group");
+      throw new AliCloudException("Not passed Server Group");
     }
 
     describeScalingGroupsRequest.setPageSize(50);
@@ -78,10 +79,10 @@ public class DestroyAliCloudServerGroupAtomicOperation implements AtomicOperatio
 
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     return null;

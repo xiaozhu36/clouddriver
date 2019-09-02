@@ -66,12 +66,12 @@ public class AliCloudCredentials implements AccountCredentials<AccountCredential
 
   @Override
   public String getEnvironment() {
-    return null;
+    return name;
   }
 
   @Override
   public String getAccountType() {
-    return null;
+    return name;
   }
 
   @Override

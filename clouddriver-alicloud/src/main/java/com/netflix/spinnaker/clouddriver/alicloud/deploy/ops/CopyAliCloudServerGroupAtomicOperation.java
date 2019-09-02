@@ -26,6 +26,7 @@ import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.AliCloudServerGroupNameResolver;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.BasicAliCloudDeployDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.deploy.DeploymentResult;
 import com.netflix.spinnaker.clouddriver.deploy.DeploymentResult.Deployment;
 import com.netflix.spinnaker.clouddriver.model.ClusterProvider;
@@ -93,7 +94,7 @@ public class CopyAliCloudServerGroupAtomicOperation implements AtomicOperation<D
     try {
       response = client.getAcsResponse(request);
       if (response.getScalingGroups().size() == 0) {
-        throw new RuntimeException("Old server group is does not exist");
+        throw new AliCloudException("Old server group is does not exist");
       }
       ScalingGroup scalingGroup = response.getScalingGroups().get(0);
 
@@ -127,10 +128,10 @@ public class CopyAliCloudServerGroupAtomicOperation implements AtomicOperation<D
       client.getAcsResponse(enableScalingGroupRequest);
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     buildResult(description, result);

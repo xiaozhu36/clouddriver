@@ -24,6 +24,7 @@ import com.aliyuncs.slb.model.v20140515.DescribeLoadBalancersRequest;
 import com.aliyuncs.slb.model.v20140515.DescribeLoadBalancersResponse;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
 import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.UpsertAliCloudLoadBalancerDescription;
+import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import groovy.util.logging.Slf4j;
 import java.util.List;
@@ -68,10 +69,10 @@ public class DeleteAliCloudLoadBalancerClassicAtomicOperation implements AtomicO
 
     } catch (ServerException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     } catch (ClientException e) {
       log.info(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
+      throw new AliCloudException(e.getMessage());
     }
 
     if (loadBalancerT != null) {
@@ -81,10 +82,10 @@ public class DeleteAliCloudLoadBalancerClassicAtomicOperation implements AtomicO
         client.getAcsResponse(request);
       } catch (ServerException e) {
         log.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       } catch (ClientException e) {
         log.info(e.getMessage());
-        throw new IllegalStateException(e.getMessage());
+        throw new AliCloudException(e.getMessage());
       }
     }
 

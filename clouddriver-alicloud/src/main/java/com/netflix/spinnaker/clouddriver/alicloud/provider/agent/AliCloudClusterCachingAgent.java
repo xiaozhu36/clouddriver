@@ -231,50 +231,67 @@ public class AliCloudClusterCachingAgent implements CachingAgent, AccountAware, 
 
   private void cacheLoadBalancer(SgData data, Map<String, CacheData> loadBalancerCaches) {
     for (String loadBalancerName : data.loadBalancerNames) {
-      Map<String, Object> attributes = new HashMap<>(16);
-
-      Map<String, Collection<String>> relationships = new HashMap<>(16);
-
-      Set<String> serverGrouprKeys = new HashSet<>();
-      serverGrouprKeys.add(data.serverGroup);
-      relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
-
-      CacheData cacheData = new DefaultCacheData(loadBalancerName, attributes, relationships);
-
-      loadBalancerCaches.put(loadBalancerName, cacheData);
+      CacheData oldCacheData = loadBalancerCaches.get(loadBalancerName);
+      if (oldCacheData == null) {
+        Map<String, Object> attributes = new HashMap<>(16);
+        Map<String, Collection<String>> relationships = new HashMap<>(16);
+        Set<String> serverGrouprKeys = new HashSet<>();
+        serverGrouprKeys.add(data.serverGroup);
+        relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
+        CacheData cacheData = new DefaultCacheData(loadBalancerName, attributes, relationships);
+        loadBalancerCaches.put(loadBalancerName, cacheData);
+      } else {
+        CacheData cacheData = loadBalancerCaches.get(loadBalancerName);
+        Map<String, Object> attributes = cacheData.getAttributes();
+        Map<String, Collection<String>> relationships = cacheData.getRelationships();
+        Set<String> serverGroupKeys = (Set<String>) relationships.get(SERVER_GROUPS.ns);
+        serverGroupKeys.add(data.serverGroup);
+        relationships.put(SERVER_GROUPS.ns, serverGroupKeys);
+      }
     }
   }
 
   private void cacheInstance(SgData data, Map<String, CacheData> instanceCaches) {
     for (String instanceId : data.instanceIds) {
-      Map<String, Object> attributes = new HashMap<>(16);
-
-      Map<String, Collection<String>> relationships = new HashMap<>(16);
-
-      Set<String> serverGrouprKeys = new HashSet<>();
-      serverGrouprKeys.add(data.serverGroup);
-      relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
-
-      CacheData cacheData = new DefaultCacheData(instanceId, attributes, relationships);
-
-      instanceCaches.put(instanceId, cacheData);
+      CacheData oldCacheData = instanceCaches.get(instanceId);
+      if (oldCacheData == null) {
+        Map<String, Object> attributes = new HashMap<>(16);
+        Map<String, Collection<String>> relationships = new HashMap<>(16);
+        Set<String> serverGrouprKeys = new HashSet<>();
+        serverGrouprKeys.add(data.serverGroup);
+        relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
+        CacheData cacheData = new DefaultCacheData(instanceId, attributes, relationships);
+        instanceCaches.put(instanceId, cacheData);
+      } else {
+        CacheData cacheData = instanceCaches.get(instanceId);
+        Map<String, Object> attributes = cacheData.getAttributes();
+        Map<String, Collection<String>> relationships = cacheData.getRelationships();
+        Set<String> serverGroupKeys = (Set<String>) relationships.get(SERVER_GROUPS.ns);
+        serverGroupKeys.add(data.serverGroup);
+        relationships.put(SERVER_GROUPS.ns, serverGroupKeys);
+      }
     }
   }
 
   private void cacheLaunchConfig(SgData data, Map<String, CacheData> launchConfigCaches) {
     String launchConfig = data.launchConfig;
-
-    Map<String, Object> attributes = new HashMap<>(16);
-
-    Map<String, Collection<String>> relationships = new HashMap<>(16);
-
-    Set<String> serverGrouprKeys = new HashSet<>();
-    serverGrouprKeys.add(data.serverGroup);
-    relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
-
-    CacheData cacheData = new DefaultCacheData(launchConfig, attributes, relationships);
-
-    launchConfigCaches.put(launchConfig, cacheData);
+    CacheData oldCacheData = launchConfigCaches.get(launchConfig);
+    if (oldCacheData == null) {
+      Map<String, Object> attributes = new HashMap<>(16);
+      Map<String, Collection<String>> relationships = new HashMap<>(16);
+      Set<String> serverGrouprKeys = new HashSet<>();
+      serverGrouprKeys.add(data.serverGroup);
+      relationships.put(SERVER_GROUPS.ns, serverGrouprKeys);
+      CacheData cacheData = new DefaultCacheData(launchConfig, attributes, relationships);
+      launchConfigCaches.put(launchConfig, cacheData);
+    } else {
+      CacheData cacheData = launchConfigCaches.get(launchConfig);
+      Map<String, Object> attributes = cacheData.getAttributes();
+      Map<String, Collection<String>> relationships = cacheData.getRelationships();
+      Set<String> serverGroupKeys = (Set<String>) relationships.get(SERVER_GROUPS.ns);
+      serverGroupKeys.add(data.serverGroup);
+      relationships.put(SERVER_GROUPS.ns, serverGroupKeys);
+    }
   }
 
   private void cacheApplication(SgData data, Map<String, CacheData> applicationCaches) {

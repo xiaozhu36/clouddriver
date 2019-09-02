@@ -20,6 +20,7 @@ import static com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider.ID;
 
 import com.google.common.base.CaseFormat;
 import com.netflix.frigga.Names;
+import com.netflix.spinnaker.clouddriver.alicloud.model.AliCloudServerGroup;
 import com.netflix.spinnaker.clouddriver.cache.KeyParser;
 import com.netflix.spinnaker.clouddriver.core.provider.agent.Namespace;
 import java.util.HashMap;
@@ -163,8 +164,11 @@ public class Keys implements KeyParser {
 
   public static String getServerGroupKey(
       String autoScalingGroupName, String account, String region) {
-    Names names = Names.parseName(autoScalingGroupName);
-    return getServerGroupKey(names.getCluster(), names.getGroup(), account, region);
+    AliCloudServerGroup serverGroup = new AliCloudServerGroup();
+    serverGroup.setName(autoScalingGroupName);
+    // Names names = Names.parseName(autoScalingGroupName);
+    return getServerGroupKey(
+        serverGroup.getMoniker().getCluster(), autoScalingGroupName, account, region);
   }
 
   public static String getServerGroupKey(
