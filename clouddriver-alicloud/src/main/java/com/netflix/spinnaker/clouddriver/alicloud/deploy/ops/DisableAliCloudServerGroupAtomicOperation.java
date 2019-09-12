@@ -20,7 +20,11 @@ import com.aliyuncs.IAcsClient;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingGroupsRequest;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingGroupsResponse;
 import com.aliyuncs.ess.model.v20140828.DescribeScalingGroupsResponse.ScalingGroup;
+import com.aliyuncs.ess.model.v20140828.DescribeScalingInstancesRequest;
+import com.aliyuncs.ess.model.v20140828.DescribeScalingInstancesResponse;
+import com.aliyuncs.ess.model.v20140828.DescribeScalingInstancesResponse.ScalingInstance;
 import com.aliyuncs.ess.model.v20140828.DisableScalingGroupRequest;
+import com.aliyuncs.ess.model.v20140828.RemoveInstancesRequest;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
@@ -28,6 +32,7 @@ import com.netflix.spinnaker.clouddriver.alicloud.deploy.description.DisableAliC
 import com.netflix.spinnaker.clouddriver.alicloud.exception.AliCloudException;
 import com.netflix.spinnaker.clouddriver.orchestration.AtomicOperation;
 import groovy.util.logging.Slf4j;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +70,33 @@ public class DisableAliCloudServerGroupAtomicOperation implements AtomicOperatio
       describeScalingGroupsResponse = client.getAcsResponse(describeScalingGroupsRequest);
       for (ScalingGroup scalingGroup : describeScalingGroupsResponse.getScalingGroups()) {
         if ("Active".equals(scalingGroup.getLifecycleState())) {
+          Integer maxSize = scalingGroup.getMaxSize();
+          Integer minSize = scalingGroup.getMinSize();
+          if (maxSize == 0 && minSize == 0) {
+            // Number of query instances
+            DescribeScalingInstancesRequest scalingInstancesRequest =
+                new DescribeScalingInstancesRequest();
+            scalingInstancesRequest.setScalingGroupId(scalingGroup.getScalingGroupId());
+            scalingInstancesRequest.setScalingConfigurationId(
+                scalingGroup.getActiveScalingConfigurationId());
+            scalingInstancesRequest.setPageSize(50);
+            DescribeScalingInstancesResponse scalingInstancesResponse =
+                client.getAcsResponse(scalingInstancesRequest);
+            List<ScalingInstance> scalingInstances = scalingInstancesResponse.getScalingInstances();
+            if (scalingInstances.size() > 0) {
+              // Remove instance
+              List<String> instanceIds = new ArrayList<>();
+              scalingInstances.forEach(
+                  scalingInstance -> {
+                    instanceIds.add(scalingInstance.getInstanceId());
+                  });
+              RemoveInstancesRequest removeInstancesRequest = new RemoveInstancesRequest();
+              removeInstancesRequest.setInstanceIds(instanceIds);
+              removeInstancesRequest.setScalingGroupId(scalingGroup.getScalingGroupId());
+              client.getAcsResponse(removeInstancesRequest);
+            }
+          }
+
           DisableScalingGroupRequest disableScalingGroupRequest = new DisableScalingGroupRequest();
           disableScalingGroupRequest.setScalingGroupId(scalingGroup.getScalingGroupId());
           client.getAcsResponse(disableScalingGroupRequest);
