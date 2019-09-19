@@ -68,29 +68,38 @@ public class AliCloudInstanceCachingAgent implements CachingAgent {
 
     DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
     describeInstancesRequest.setSysRegionId(region);
+    int pageNumber = 1;
+    int pageSize = 10;
 
     DescribeInstancesResponse describeInstancesResponse;
     try {
-      describeInstancesResponse = client.getAcsResponse(describeInstancesRequest);
-      if (!CollectionUtils.isEmpty(describeInstancesResponse.getInstances())) {
-        for (DescribeInstancesResponse.Instance instance :
-            describeInstancesResponse.getInstances()) {
-          String zoneId = instance.getZoneId();
-          String regionId = instance.getBizRegionId();
-          String instanceId = instance.getInstanceId();
+      while (true) {
+        describeInstancesRequest.setPageNumber(pageNumber);
+        describeInstancesRequest.setPageSize(pageSize);
+        describeInstancesResponse = client.getAcsResponse(describeInstancesRequest);
+        if (!CollectionUtils.isEmpty(describeInstancesResponse.getInstances())) {
+          pageNumber = pageNumber + 1;
+          for (DescribeInstancesResponse.Instance instance :
+              describeInstancesResponse.getInstances()) {
+            String zoneId = instance.getZoneId();
+            String regionId = instance.getBizRegionId();
+            String instanceId = instance.getInstanceId();
 
-          Map<String, Object> attributes = objectMapper.convertValue(instance, Map.class);
-          attributes.put("provider", AliCloudProvider.ID);
-          attributes.put("account", account.getName());
-          attributes.put("regionId", regionId);
-          attributes.put("zoneId", zoneId);
+            Map<String, Object> attributes = objectMapper.convertValue(instance, Map.class);
+            attributes.put("provider", AliCloudProvider.ID);
+            attributes.put("account", account.getName());
+            attributes.put("regionId", regionId);
+            attributes.put("zoneId", zoneId);
 
-          CacheData data =
-              new DefaultCacheData(
-                  Keys.getInstanceKey(instanceId, account.getName(), regionId),
-                  attributes,
-                  new HashMap<>(16));
-          instanceDatas.add(data);
+            CacheData data =
+                new DefaultCacheData(
+                    Keys.getInstanceKey(instanceId, account.getName(), regionId),
+                    attributes,
+                    new HashMap<>(16));
+            instanceDatas.add(data);
+          }
+        } else {
+          break;
         }
       }
     } catch (ServerException e) {
