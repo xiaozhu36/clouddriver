@@ -18,6 +18,7 @@ package com.netflix.spinnaker.clouddriver.alicloud.model;
 
 import com.netflix.spinnaker.clouddriver.model.HealthState;
 import com.netflix.spinnaker.clouddriver.model.Instance;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,8 @@ public class AliCloudInstance implements Instance {
   private String cloudProvider;
   private HealthState healthState;
   private List<Map<String, Object>> health;
+
+  private Map<String, Object> attributes = new HashMap<String, Object>();
 
   public AliCloudInstance(
       String name,
@@ -81,5 +84,13 @@ public class AliCloudInstance implements Instance {
   @Override
   public List<Map<String, Object>> getHealth() {
     return health;
+  }
+
+  public Map<String, Object> getAttributes() {
+    return attributes;
+  }
+
+  public void setAttributes(Map<String, Object> attributes) {
+    this.attributes = attributes;
   }
 }

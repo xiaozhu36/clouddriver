@@ -20,13 +20,7 @@ import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.cats.agent.Agent;
 import com.netflix.spinnaker.clouddriver.alicloud.AliCloudProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.common.ClientFactory;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudClusterCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudImageCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudInstanceTypeCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudKeyPairCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudLoadBalancerCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudSecurityGroupCachingAgent;
-import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.AliCloudSubnetCachingAgent;
+import com.netflix.spinnaker.clouddriver.alicloud.provider.agent.*;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudClientProvider;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentials;
 import com.netflix.spinnaker.clouddriver.alicloud.security.AliCloudCredentialsProvider;
@@ -144,6 +138,13 @@ public class AliProviderConfig {
                         region, credentials.getAccessKeyId(), credentials.getAccessSecretKey())));
             newAgents.add(
                 new AliCloudClusterCachingAgent(
+                    credentials,
+                    region,
+                    objectMapper,
+                    clientFactory.createClient(
+                        region, credentials.getAccessKeyId(), credentials.getAccessSecretKey())));
+            newAgents.add(
+                new AliCloudInstanceCachingAgent(
                     credentials,
                     region,
                     objectMapper,
