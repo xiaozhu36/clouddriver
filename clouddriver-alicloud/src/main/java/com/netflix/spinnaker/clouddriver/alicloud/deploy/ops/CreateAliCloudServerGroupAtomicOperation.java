@@ -17,12 +17,7 @@
 package com.netflix.spinnaker.clouddriver.alicloud.deploy.ops;
 
 import com.aliyuncs.IAcsClient;
-import com.aliyuncs.ess.model.v20140828.CreateScalingConfigurationRequest;
-import com.aliyuncs.ess.model.v20140828.CreateScalingConfigurationResponse;
-import com.aliyuncs.ess.model.v20140828.CreateScalingGroupRequest;
-import com.aliyuncs.ess.model.v20140828.CreateScalingGroupResponse;
-import com.aliyuncs.ess.model.v20140828.EnableScalingGroupRequest;
-import com.aliyuncs.ess.model.v20140828.EnableScalingGroupResponse;
+import com.aliyuncs.ess.model.v20140828.*;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -91,6 +86,7 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
     description.setScalingGroupName(serverGroupName);
     CreateScalingGroupRequest createScalingGroupRequest =
         objectMapper.convertValue(description, CreateScalingGroupRequest.class);
+    rebuildCreateScalingGroupRequest(description, createScalingGroupRequest);
     createScalingGroupRequest.setScalingGroupName(serverGroupName);
     if (!StringUtils.isEmpty(description.getVSwitchId())) {
       createScalingGroupRequest.setVSwitchId(description.getVSwitchId());
@@ -156,6 +152,44 @@ public class CreateAliCloudServerGroupAtomicOperation implements AtomicOperation
     buildResult(description, result);
 
     return result;
+  }
+
+  private void rebuildCreateScalingGroupRequest(
+      BasicAliCloudDeployDescription description, CreateScalingGroupRequest request) {
+    if (description != null
+        && description.getSource() != null
+        && description.getSource().getUseSourceCapacity()
+        && StringUtils.isNotEmpty(description.getSource().getAsgName())) {
+
+      String asgName = description.getSource().getAsgName();
+      DescribeScalingGroupsRequest describeScalingGroupsRequest =
+          new DescribeScalingGroupsRequest();
+      describeScalingGroupsRequest.setScalingGroupName(asgName);
+      DescribeScalingGroupsResponse describeScalingGroupsResponse;
+      try {
+        IAcsClient client =
+            clientFactory.createClient(
+                description.getRegion(),
+                description.getCredentials().getAccessKeyId(),
+                description.getCredentials().getAccessSecretKey());
+
+        describeScalingGroupsResponse = client.getAcsResponse(describeScalingGroupsRequest);
+        if (describeScalingGroupsResponse.getScalingGroups().size() == 0) {
+          throw new AliCloudException("Old server group is does not exist");
+        }
+        DescribeScalingGroupsResponse.ScalingGroup scalingGroup =
+            describeScalingGroupsResponse.getScalingGroups().get(0);
+        if (scalingGroup.getMaxSize() != null) {
+          request.setMaxSize(scalingGroup.getMaxSize());
+        }
+        if (scalingGroup.getMinSize() != null) {
+          request.setMinSize(scalingGroup.getMinSize());
+        }
+      } catch (Exception e) {
+        log.info(e.getMessage());
+        throw new AliCloudException(e.getMessage());
+      }
+    }
   }
 
   private void buildResult(BasicAliCloudDeployDescription description, DeploymentResult result) {
